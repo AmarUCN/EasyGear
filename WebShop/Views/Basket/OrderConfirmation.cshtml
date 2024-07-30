@@ -1,0 +1,39 @@
+﻿@model WebShop.DTO.OrderConfirmationViewModel
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<h2>Order Confirmation</h2>
+
+<div>
+    <h3>Thank you for your order!</h3>
+    <p>Order Number: @Model.OrderNumber</p>
+    <p>Delivered To: @Model.DeliveredTo</p>
+    <p>Delivery Date: @Model.DeliveryDate.ToString("f")</p>
+</div>
+
+<div>
+    <h4>Order Details:</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ProductLines)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Price.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<a href="@Url.Action("Index", "Home")">Back to Home</a>

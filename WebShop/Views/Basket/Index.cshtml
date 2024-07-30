@@ -1,0 +1,116 @@
+﻿@model WebShop.DTO.BasketViewModel
+
+@{
+    ViewData["Title"] = "Shopping Basket";
+}
+
+<h2>Shopping Basket</h2>
+
+<div>
+    <h3>Available Products</h3>
+    <form asp-action="AddToBasket" method="post">
+        <div class="product-gallery">
+            @foreach (var product in Model.Products)
+            {
+                <div class="product-item">
+                    <img src="~/images/products/placeholder-image.jpg" alt="@product.ProductName" class="product-image" />
+                    <h4>@product.ProductName</h4>
+                    <p>Price: @product.Price</p>
+                    <input type="radio" asp-for="SelectedProductId" value="@product.ProductID" /> Select
+                </div>
+            }
+        </div>
+        <div>
+            <label for="quantity">Quantity:</label>
+            <input type="number" asp-for="Quantity" value="1" min="1" />
+        </div>
+        <button type="submit">Add to Basket</button>
+    </form>
+</div>
+
+<div>
+    <h3>Your Basket</h3>
+    @if (Model.Basket.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var productLine in Model.Basket)
+                {
+                    var product = Model.Products.FirstOrDefault(p => p.ProductID == productLine.ProductID);
+                    <tr>
+                        <td>@product?.ProductName</td>
+                        <td>
+                            <form asp-action="UpdateProductQuantity" method="post" style="display:inline;">
+                                <input type="hidden" name="productID" value="@productLine.ProductID" />
+                                <input type="number" name="quantity" value="@productLine.Quantity" min="0" />
+                                <button type="submit">Update</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form asp-action="RemoveFromBasket" method="post" style="display:inline;">
+                                <input type="hidden" name="productID" value="@productLine.ProductID" />
+                                <button type="submit">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <form asp-action="ClearBasket" method="post">
+            <button type="submit">Clear Basket</button>
+        </form>
+
+        <h3>Checkout</h3>
+        <form asp-action="Checkout" method="post">
+            <div>
+                <label for="deliveredTo">Delivered To:</label>
+                <input type="text" name="deliveredTo" id="deliveredTo" required />
+            </div>
+            <div>
+                <label for="deliveryDate">Delivery Date:</label>
+                <input type="datetime-local" name="deliveryDate" id="deliveryDate" required />
+            </div>
+            <button type="submit">Checkout</button>
+        </form>
+    }
+    else
+    {
+        <p>Your basket is empty.</p>
+    }
+</div>
+
+<style>
+    .product-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .product-item {
+        border: 1px solid #ccc;
+        padding: 10px;
+        width: 150px;
+        text-align: center;
+    }
+
+    .product-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
+
+    .product-item h4 {
+        margin: 10px 0 5px 0;
+    }
+
+    .product-item p {
+        margin: 5px 0;
+    }
+</style>

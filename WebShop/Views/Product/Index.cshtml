@@ -1,0 +1,42 @@
+﻿@model IEnumerable<DAL.Models.Product>
+
+<h2>Product List</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <p>No products found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <!-- Add other columns as needed -->
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ProductID</td>
+                    <td>@item.ProductName</td>
+                    <!-- Add other columns as needed -->
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.ProductID">Details</a> |
+                        <a asp-action="Edit" asp-route-id="@item.ProductID">Edit</a> |
+                        <a asp-action="Delete" asp-route-id="@item.ProductID">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
