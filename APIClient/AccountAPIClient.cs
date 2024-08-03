@@ -9,7 +9,7 @@ namespace APIClient
 {
     public class AccountAPIClient : AccountDAO
     {
-        RestClient _client;
+        private readonly RestClient _client;
 
         public AccountAPIClient(string apiResourceUrl)
         {
@@ -21,9 +21,8 @@ namespace APIClient
             var request = new RestRequest("api/accounts", Method.Post);
             var accountToCreate = new Account
             {
-                UserName = newAccount.UserName,
                 Email = newAccount.Email,
-                Password = newAccount.Password
+                Password = newAccount.Password // Plain text
             };
 
             request.AddJsonBody(accountToCreate);
@@ -37,6 +36,7 @@ namespace APIClient
             throw new Exception("Error adding account");
         }
 
+
         public Account? GetById(int accountID)
         {
             var request = new RestRequest($"api/accounts/{accountID}", Method.Get);
@@ -45,11 +45,12 @@ namespace APIClient
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Data != null)
             {
                 var account = response.Data;
-                return new Account(account.AccountID, account.UserName, account.Email, account.Password);
+                return new Account(account.AccountID, account.Email, account.Password);
             }
 
             return null;
         }
+
 
         public Account? Login(string email, string password)
         {
@@ -62,10 +63,12 @@ namespace APIClient
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Data != null)
             {
                 var account = response.Data;
-                return new Account(account.AccountID, account.UserName, account.Email, account.Password);
+                return new Account(account.AccountID, account.Email, account.Password);
             }
 
             return null;
         }
+
     }
 }
+

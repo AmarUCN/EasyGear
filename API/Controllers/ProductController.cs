@@ -16,7 +16,7 @@ namespace API.Controllers
         }
 
         // GET: api/Product/{id}
-        [HttpGet("{id}")]
+        [HttpGet("{Product}")]
         public ActionResult<Product> GetProductById(int id)
         {
             var product = _productDAO.GetProductById(id);
@@ -45,14 +45,14 @@ namespace API.Controllers
             }
             
             _productDAO.AddProduct(product);
-            return CreatedAtAction(nameof(GetProductById), new { id = product.ProductID }, product);
+            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
         }
 
         // PUT: api/Product/{id}
-        [HttpPut("{id}")]
+        [HttpPut("{Product}")]
         public ActionResult UpdateProduct(int id, [FromBody] Product product)
         {
-            if (product == null || product.ProductID != id)
+            if (product == null || product.Id != id)
             {
                 return BadRequest();
             }
@@ -66,7 +66,7 @@ namespace API.Controllers
         }
 
         // DELETE: api/Product/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("{Product}")]
         public ActionResult DeleteProduct(int id)
         {
             var existingProduct = _productDAO.GetProductById(id);

@@ -1,63 +1,108 @@
 ﻿using DAL.DAO;
-using DAL.DB;
 using DAL.Models;
 using RestSharp;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace APIClient
 {
     public class ProductLineAPIClient : ProductLineDAO
     {
-        RestClient _client;
+        private readonly RestClient _client;
 
         public ProductLineAPIClient(string apiResourceUrl)
         {
             _client = new RestClient(apiResourceUrl);
         }
 
-
+        // Create a new ProductLine
         public void AddProductLine(ProductLine productLine)
         {
-            var request = new RestRequest("api/ProductLine", Method.Post);
+            var request = new RestRequest("api/productline", Method.Post);
             request.AddJsonBody(productLine);
 
             var response = _client.Execute(request);
+
+            if (response.IsSuccessful)
+            {
+                // Optionally handle response if needed
+            }
+            else
+            {
+                throw new Exception($"Failed to create ProductLine: {response.Content}");
+            }
         }
 
-        public bool DeleteProductLine(int productLineID)
+        // Delete a ProductLine
+        public bool DeleteProductLine(int id)
         {
-            var request = new RestRequest($"api/ProductLine/{productLineID}", Method.Delete);
-            var response = _client.Execute<int>(request);
+            var request = new RestRequest($"api/productline/{id}", Method.Delete);
+
+            var response = _client.Execute(request);
+
             if (response.IsSuccessful)
             {
                 return true;
             }
             else
             {
-                throw new Exception($"Failed to delete with ID {productLineID}. Error: {response.ErrorMessage}");
+                // Optionally handle error if needed
+                throw new Exception($"Failed to delete ProductLine: {response.Content}");
             }
         }
 
+        // Get all ProductLines
         public IEnumerable<ProductLine> GetAllProductLines()
         {
-            throw new NotImplementedException();
+            var request = new RestRequest("api/productline", Method.Get);
+
+            var response = _client.Execute<IEnumerable<ProductLine>>(request);
+
+            if (response.IsSuccessful)
+            {
+                return response.Data;
+            }
+            else
+            {
+                throw new Exception($"Failed to retrieve ProductLines: {response.Content}");
+            }
         }
 
-        public ProductLine? GetProductLineById(int productLineID)
+        // Get a ProductLine by ID
+        public ProductLine  ? GetProductLineById(int id)
         {
-            var request = new RestRequest($"api/ProductLine/ {productLineID}", Method.Get);
+            var request = new RestRequest($"api/productline/{id}", Method.Get);
+
             var response = _client.Execute<ProductLine>(request);
 
-            return response.Data;
+            if (response.IsSuccessful)
+            {
+                return response.Data;
+            }
+            else
+            {
+                throw new Exception($"Failed to retrieve ProductLine: {response.Content}");
+            }
         }
 
+        // Update a ProductLine
         public bool UpdateProductLine(ProductLine productLine)
         {
-            throw new NotImplementedException();
+            var request = new RestRequest($"api/productline/{productLine.Id}", Method.Put);
+            request.AddJsonBody(productLine);
+
+            var response = _client.Execute(request);
+
+            if (response.IsSuccessful)
+            {
+                return true;
+            }
+            else
+            {
+                throw new Exception($"Failed to update ProductLine: {response.Content}");
+            }
         }
     }
 }
+
+

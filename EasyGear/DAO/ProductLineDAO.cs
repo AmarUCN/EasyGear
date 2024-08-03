@@ -10,9 +10,11 @@ namespace DAL.DAO
     public interface ProductLineDAO
     {
         void AddProductLine(ProductLine productLine);
-        bool DeleteProductLine(int productLineID);
+        bool DeleteProductLine(int id);
         IEnumerable<ProductLine> GetAllProductLines();
-        ProductLine? GetProductLineById(int productLineID);
+        ProductLine? GetProductLineById(int id);
         bool UpdateProductLine(ProductLine productLine);
     }
 }
+
+

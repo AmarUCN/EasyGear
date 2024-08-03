@@ -58,7 +58,7 @@ namespace APIClient
 
         public bool UpdateProduct(Product product)
         {
-            var request = new RestRequest($"api/Product/{product.ProductID}", Method.Put);
+            var request = new RestRequest($"api/Product/{product.Id}", Method.Put);
             request.AddJsonBody(product);
 
             var response = _client.Execute(request);

@@ -14,3 +14,5 @@ namespace WebShop.DTO
         public string Password { get; set; }
     }
 }
+
+

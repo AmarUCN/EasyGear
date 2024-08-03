@@ -21,13 +21,13 @@ else
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>@item.ProductID</td>
+                    <td>@item.Id</td>
                     <td>@item.ProductName</td>
                     <!-- Add other columns as needed -->
                     <td>
-                        <a asp-action="Details" asp-route-id="@item.ProductID">Details</a> |
-                        <a asp-action="Edit" asp-route-id="@item.ProductID">Edit</a> |
-                        <a asp-action="Delete" asp-route-id="@item.ProductID">Delete</a>
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
                     </td>
                 </tr>
             }

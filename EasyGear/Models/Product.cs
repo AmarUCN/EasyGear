@@ -2,13 +2,13 @@
 {
     public class Product
     {
-        public int ProductID { get; set; }
+        public int Id { get; set; }
         public string ProductName { get; set; }
         public int Price { get; set; }
 
-        public Product(int productID, string productName, int price)
+        public Product(int id, string productName, int price)
         {
-            ProductID = productID;
+            Id = id;
             ProductName = productName;
             Price = price;
         }
@@ -24,3 +24,4 @@
         }
     }
 }
+

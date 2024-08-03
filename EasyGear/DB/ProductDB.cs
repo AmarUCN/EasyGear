@@ -1,20 +1,18 @@
-﻿using DAL.DAO;
-using DAL.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using DAL.DAO;
+using DAL.Models;
 
 namespace DAL.DB
 {
     public class ProductDB : ProductDAO
     {
         public string ConnectionString { get; private set; }
-        private SqlConnection _connection;
 
         public ProductDB(string connectionString)
         {
             ConnectionString = connectionString;
-            _connection = new SqlConnection(connectionString);
         }
 
         public void AddProduct(Product product)
@@ -22,15 +20,16 @@ namespace DAL.DB
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-
-                using (var command = new SqlCommand("INSERT INTO Product (ProductName, Price) VALUES (@ProductName, @Price); SELECT SCOPE_IDENTITY();", connection))
+                using (var transaction = connection.BeginTransaction())
                 {
-                    command.Parameters.AddWithValue("@ProductName", product.ProductName);
-                    command.Parameters.AddWithValue("@Price", product.Price);
-
-                    
-                    product.ProductID = Convert.ToInt32(command.ExecuteScalar());
-                    connection.Close();
+                    var query = "INSERT INTO Product (ProductName, Price) VALUES (@ProductName, @Price); SELECT SCOPE_IDENTITY();";
+                    using (var command = new SqlCommand(query, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@ProductName", product.ProductName);
+                        command.Parameters.AddWithValue("@Price", product.Price);
+                        product.Id = Convert.ToInt32(command.ExecuteScalar());
+                        transaction.Commit();
+                    }
                 }
             }
         }
@@ -40,13 +39,16 @@ namespace DAL.DB
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-
-                using (var command = new SqlCommand("DELETE FROM Product WHERE ProductID = @ProductID;", connection))
+                using (var transaction = connection.BeginTransaction())
                 {
-                    command.Parameters.AddWithValue("@ProductID", productID);
-                    bool success = command.ExecuteNonQuery() > 0;
-                    connection.Close();
-                    return success;
+                    var query = "DELETE FROM Product WHERE ProductID = @ProductID;";
+                    using (var command = new SqlCommand(query, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@ProductID", productID);
+                        var result = command.ExecuteNonQuery();
+                        transaction.Commit();
+                        return result > 0;
+                    }
                 }
             }
         }
@@ -58,53 +60,59 @@ namespace DAL.DB
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-
-                using (var command = new SqlCommand("SELECT ProductID, ProductName, Price FROM Product;", connection))
+                using (var transaction = connection.BeginTransaction())
                 {
-                    using (var reader = command.ExecuteReader())
+                    var query = "SELECT ProductID, ProductName, Price FROM Product WITH (UPDLOCK, ROWLOCK);";
+                    using (var command = new SqlCommand(query, connection, transaction))
                     {
-                        while (reader.Read())
+                        using (var reader = command.ExecuteReader())
                         {
-                            products.Add(new Product
+                            while (reader.Read())
                             {
-                                ProductID = reader.GetInt32(0),
-                                ProductName = reader.GetString(1),
-                                Price = reader.GetInt32(2)
-                            });
+                                products.Add(new Product
+                                {
+                                    Id = reader.GetInt32(0),
+                                    ProductName = reader.GetString(1),
+                                    Price = reader.GetInt32(2)
+                                });
+                            }
                         }
                     }
+                    transaction.Commit();
                 }
             }
 
             return products;
         }
 
-        public Product GetProductById(int productID)
+        public Product? GetProductById(int productID)
         {
-            Product product = null;
+            Product? product = null;
 
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-
-                
-                using (var command = new SqlCommand("SELECT ProductID, ProductName, Price FROM Product WHERE ProductID = @ProductID;", connection))
+                using (var transaction = connection.BeginTransaction())
                 {
-                    command.Parameters.AddWithValue("@ProductID", productID);
-
-                    using (var reader = command.ExecuteReader())
+                    // Simplified query without 'WITH' clause
+                    var query = "SELECT ProductID, ProductName, Price FROM Product WHERE ProductID = @ProductID;";
+                    using (var command = new SqlCommand(query, connection, transaction))
                     {
-                        if (reader.Read())
+                        command.Parameters.AddWithValue("@ProductID", productID);
+                        using (var reader = command.ExecuteReader())
                         {
-                            
-                            int id = reader.GetInt32(0);
-                            string productName = reader.GetString(1);
-                            int price = reader.GetInt32(2);
-
-                            
-                            product = new Product(id, productName, price);
+                            if (reader.Read())
+                            {
+                                product = new Product
+                                {
+                                    Id = reader.GetInt32(0),
+                                    ProductName = reader.GetString(1),
+                                    Price = reader.GetInt32(2)  
+                                };
+                            }
                         }
                     }
+                    transaction.Commit();
                 }
             }
 
@@ -117,16 +125,23 @@ namespace DAL.DB
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-
-                using (var command = new SqlCommand("UPDATE Product SET ProductName = @ProductName WHERE ProductID = @ProductID;", connection))
+                using (var transaction = connection.BeginTransaction())
                 {
-                    command.Parameters.AddWithValue("@ProductID", product.ProductID);
-                    command.Parameters.AddWithValue("@ProductName", product.ProductName);
-                    bool success = command.ExecuteNonQuery() > 0;
-                    connection.Close();
-                    return success;
+                    var query = "UPDATE Product SET ProductName = @ProductName, Price = @Price WHERE ProductID = @ProductID;";
+                    using (var command = new SqlCommand(query, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@ProductID", product.Id);
+                        command.Parameters.AddWithValue("@ProductName", product.ProductName);
+                        command.Parameters.AddWithValue("@Price", product.Price);
+                        var result = command.ExecuteNonQuery();
+                        transaction.Commit();
+                        return result > 0;
+                    }
                 }
             }
         }
     }
 }
+
+
+

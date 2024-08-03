@@ -1,12 +1,10 @@
-﻿using DAL.DAO;
-using DAL.Models;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Numerics;
-using System.Text;
 using System.Threading.Tasks;
+using DAL.DAO;
+using DAL.Models;
 
 namespace DAL.DB
 {
@@ -21,109 +19,149 @@ namespace DAL.DB
             _connection = new SqlConnection(connectionString);
         }
 
+        public void AddProductLine(ProductLine productLine)
+        {
+            using (var command = new SqlCommand("INSERT INTO ProductLine (Quantity, ProductID, BasketID, OrderNumber) VALUES (@Quantity, @ProductID, @BasketID, @OrderNumber); SELECT SCOPE_IDENTITY();", _connection))
+            {
+                _connection.Open();
+
+                command.Parameters.AddWithValue("@Quantity", productLine.Quantity);
+                command.Parameters.AddWithValue("@ProductID", productLine.ProductID);
+                command.Parameters.AddWithValue("@BasketID", (object)productLine.BasketID ?? DBNull.Value);
+                command.Parameters.AddWithValue("@OrderNumber", (object)productLine.OrderNumber ?? DBNull.Value);
+
+                productLine.Id = Convert.ToInt32(command.ExecuteScalar());
+
+                _connection.Close();
+            }
+        }
+
+        public bool DeleteProductLine(int id)
+        {
+            try
+            {
+                _connection.Open();
+
+                string query = "DELETE FROM ProductLine WHERE ProductLineID = @id";
+
+                using (SqlCommand command = new SqlCommand(query, _connection))
+                {
+                    command.Parameters.AddWithValue("@id", id);
+
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    return rowsAffected > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                _connection.Close();
+            }
+
+            return false;
+        }
 
         public IEnumerable<ProductLine> GetAllProductLines()
         {
-            var productLines = new List<ProductLine>();
+            List<ProductLine> productLines = new List<ProductLine>();
+            string query = "SELECT ProductLineID, Quantity, ProductID, BasketID, OrderNumber FROM ProductLine";
 
-            using (var connection = new SqlConnection(ConnectionString))
+            using (SqlCommand command = new SqlCommand(query, _connection))
             {
-                connection.Open();
-                using (var command = new SqlCommand("SELECT pl.ProductLineID, pl.ProductID, pl.OrderNumber, pl.Quantity, p.ProductName, p.Price " +
-                                                   "FROM ProductLine pl " +
-                                                   "JOIN Product p ON pl.ProductID = p.ProductID;", connection))
+                _connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
                 {
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            productLines.Add(new ProductLine
-                            {
-                                ProductLineID = reader.GetInt32(0),
-                                ProductID = reader.GetInt32(1),
-                                OrderNumber = reader.GetInt32(2),
-                                Quantity = reader.GetInt32(3),
-                                
-                            });
-                        }
-                    }
+                    int productLineId = reader.GetInt32(0);
+                    int quantity = reader.GetInt32(1);
+                    int productId = reader.GetInt32(2);
+                    int? basketId = reader.IsDBNull(3) ? (int?)null : reader.GetInt32(3);
+                    int? orderNumber = reader.IsDBNull(4) ? (int?)null : reader.GetInt32(4);
+
+                    ProductLine productLine = new ProductLine(productLineId, productId, quantity, basketId, orderNumber);
+                    productLines.Add(productLine);
                 }
+
+                _connection.Close();
             }
 
             return productLines;
         }
 
-        public ProductLine? GetProductLineById(int productLineID)
+        public ProductLine? GetProductLineById(int id)
         {
-            using (var connection = new SqlConnection(ConnectionString))
+            try
             {
-                connection.Open();
-                using (var command = new SqlCommand("SELECT pl.ProductLineID, pl.ProductID, pl.OrderNumber, pl.Quantity, p.ProductName, p.Price " +
-                                                   "FROM ProductLine pl " +
-                                                   "JOIN Product p ON pl.ProductID = p.ProductID " +
-                                                   "WHERE pl.ProductLineID = @ProductLineID;", connection))
+                _connection.Open();
+
+                string query = "SELECT ProductLineID, Quantity, ProductID, BasketID, OrderNumber FROM ProductLine WHERE ProductLineID = @id";
+
+                using (SqlCommand command = new SqlCommand(query, _connection))
                 {
-                    command.Parameters.AddWithValue("@ProductLineID", productLineID);
-                    using (var reader = command.ExecuteReader())
+                    command.Parameters.AddWithValue("@id", id);
+
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
                     {
-                        if (reader.Read())
-                        {
-                            return new ProductLine
-                            {
-                                ProductLineID = reader.GetInt32(0),
-                                ProductID = reader.GetInt32(1),
-                                OrderNumber = reader.GetInt32(2),
-                                Quantity = reader.GetInt32(3)
-                                // Price and ProductName handled in the model or elsewhere
-                            };
-                        }
+                        int productLineId = reader.GetInt32(0);
+                        int quantity = reader.GetInt32(1);
+                        int productId = reader.GetInt32(2);
+                        int? basketId = reader.IsDBNull(3) ? (int?)null : reader.GetInt32(3);
+                        int? orderNumber = reader.IsDBNull(4) ? (int?)null : reader.GetInt32(4);
+
+                        return new ProductLine(productLineId, productId, quantity, basketId, orderNumber);
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                _connection.Close();
             }
 
             return null;
         }
 
-        public void AddProductLine(ProductLine productLine)
-        {
-            using (var connection = new SqlConnection(ConnectionString))
-            {
-                connection.Open();
-                using (var command = new SqlCommand("INSERT INTO ProductLine (ProductID, OrderNumber, Quantity) VALUES (@ProductID, @OrderNumber, @Quantity); SELECT SCOPE_IDENTITY();", connection))
-                {
-                    command.Parameters.AddWithValue("@ProductID", productLine.ProductID);
-                    command.Parameters.AddWithValue("@OrderNumber", productLine.OrderNumber);
-                    command.Parameters.AddWithValue("@Quantity", productLine.Quantity);
-                    productLine.ProductLineID = Convert.ToInt32(command.ExecuteScalar());
-                }
-            }
-        }
-
-        public bool DeleteProductLine(int productLineID)
-        {
-            using (var connection = new SqlConnection(ConnectionString))
-            {
-                connection.Open();
-                using (var command = new SqlCommand("DELETE FROM ProductLine WHERE ProductLineID = @ProductLineID;", connection))
-                {
-                    command.Parameters.AddWithValue("@ProductLineID", productLineID);
-                    return command.ExecuteNonQuery() > 0;
-                }
-            }
-        }
         public bool UpdateProductLine(ProductLine productLine)
         {
-            using (var connection = new SqlConnection(ConnectionString))
+            try
             {
-                connection.Open();
-                using (var command = new SqlCommand("UPDATE ProductLine SET Quantity = @Quantity WHERE ProductID = @ProductID;", connection))
+                _connection.Open();
+
+                string query = "UPDATE ProductLine SET Quantity = @quantity, ProductID = @productId, BasketID = @basketId, OrderNumber = @orderNumber WHERE ProductLineID = @id";
+
+                using (SqlCommand command = new SqlCommand(query, _connection))
                 {
-                    command.Parameters.AddWithValue("@ProductID", productLine.ProductID);
-                    command.Parameters.AddWithValue("@Quantity", productLine.Quantity);
-                    return command.ExecuteNonQuery() > 0;
+                    command.Parameters.AddWithValue("@quantity", productLine.Quantity);
+                    command.Parameters.AddWithValue("@productId", productLine.ProductID);
+                    command.Parameters.AddWithValue("@basketId", (object)productLine.BasketID ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@orderNumber", (object)productLine.OrderNumber ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@id", productLine.Id);
+
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    return rowsAffected > 0;
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                _connection.Close();
+            }
+
+            return false;
         }
     }
 }
-

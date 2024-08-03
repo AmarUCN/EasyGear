@@ -12,3 +12,4 @@ namespace APIClient.DTO
         public string Password { get; set; }
     }
 }
+

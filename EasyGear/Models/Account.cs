@@ -10,24 +10,23 @@ namespace DAL.Models
     public class Account
     {
         public int AccountID { get; set; }
-        public string UserName { get; set; }
+
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+
         [Required]
         [RegularExpression(@"[^\s]+", ErrorMessage = "No spaces in password")]
         public string Password { get; set; }
 
-        public Account(int accountID, string userName, string email, string password) 
+        public Account(int accountID, string email, string password)
         {
-            this.AccountID = accountID;
-            this.UserName = userName;
-            this.Email = email;
-            this.Password = password;
+            AccountID = accountID;
+            Email = email;
+            Password = password;
         }
 
         public Account() { }
-
-
     }
 }
+

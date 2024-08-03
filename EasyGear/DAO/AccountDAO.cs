@@ -14,3 +14,5 @@ namespace DAL.DAO
         int Add(Account account);
     }
 }
+
+

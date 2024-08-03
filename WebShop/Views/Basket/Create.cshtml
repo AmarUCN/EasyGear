@@ -1,0 +1,55 @@
+﻿@model WebShop.DTO.BasketViewModel
+
+@{
+    ViewBag.Title = "Create Basket";
+}
+
+<h2>Create Basket</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="CreatedAt">Creation Date</label>
+        <input asp-for="CreatedAt" class="form-control" type="date" />
+    </div>
+    <div id="product-lines-container">
+        <!-- JavaScript will dynamically add product line inputs here -->
+    </div>
+    <button type="button" id="add-product-line" class="btn btn-secondary">Add Product Line</button>
+    <button type="submit" class="btn btn-primary">Create Basket</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var container = document.getElementById("product-lines-container");
+            var index = 0;
+
+            function addProductLine() {
+                var html = `
+                            <div class="form-group">
+                                <label>Product</label>
+                                <select name="ProductLines[${index}].ProductId" class="form-control">
+        @foreach (var product in ViewBag.Products)
+        {
+                                            <option value="@product.Id">@product.ProductName</option>
+        }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input name="ProductLines[${index}].Quantity" class="form-control" type="number" />
+                            </div>
+                        `;
+                container.innerHTML += html;
+                index++;
+            }
+
+            // Add the initial product line
+            addProductLine();
+
+            // Add more product lines when the button is clicked
+            document.getElementById("add-product-line").addEventListener("click", addProductLine);
+        });
+    </script>
+}
+

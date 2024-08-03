@@ -18,7 +18,7 @@
                 <td>@product.Price</td>
                 <td>
                     <form asp-action="Add" asp-controller="Basket" method="post">
-                        <input type="hidden" name="productID" value="@product.ProductID" />
+                        <input type="hidden" name="productID" value="@product.Id" />
                         <input type="hidden" name="quantity" value="1" />
                         <button type="submit" class="btn btn-primary">Add to Basket</button>
                     </form>

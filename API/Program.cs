@@ -11,14 +11,15 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        
-        
+
+
 
         // Register ProductDB with the connection string
         builder.Services.AddScoped<ProductDAO>((_) => new ProductDB("Data Source=hildur.ucn.dk;Initial Catalog=dma-csd-v221_10009362;User Id=dma-csd-v221_10009362;Password=Password1!;"));
         builder.Services.AddScoped<ProductLineDAO>((_) => new ProductLineDB("Data Source=hildur.ucn.dk;Initial Catalog=dma-csd-v221_10009362;User Id=dma-csd-v221_10009362;Password=Password1!;"));
         builder.Services.AddScoped<DeliveryDAO>((_) => new DeliveryDB("Data Source=hildur.ucn.dk;Initial Catalog=dma-csd-v221_10009362;User Id=dma-csd-v221_10009362;Password=Password1!;"));
         builder.Services.AddScoped<AccountDAO>((_) => new AccountDB("Data Source=hildur.ucn.dk;Initial Catalog=dma-csd-v221_10009362;User Id=dma-csd-v221_10009362;Password=Password1!;"));
+        builder.Services.AddScoped<BasketDAO>((_) => new BasketDB("Data Source=hildur.ucn.dk;Initial Catalog=dma-csd-v221_10009362;User Id=dma-csd-v221_10009362;Password=Password1!;"));
 
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
      .AddCookie(options =>
@@ -31,6 +32,7 @@ public class Program
 
         // Add services to the container
         builder.Services.AddControllers();
+        builder.Services.AddLogging();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();

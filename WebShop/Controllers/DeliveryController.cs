@@ -13,31 +13,8 @@ namespace WebShop.Controllers
             _deliveryDAO = deliveryDAO;
         }
 
-        public IActionResult Create()
-        {
+        
 
-            return View(new Delivery());
-        }
-
-        // POST: Product/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Delivery delivery)
-        {
-            try
-            {
-                if (ModelState.IsValid)
-
-                    _deliveryDAO.AddOrder(delivery);
-                return RedirectToAction("Index");
-
-            }
-            catch
-            {
-                return View();
-            }
-
-
-        }
+        
     }
 }

@@ -9,15 +9,22 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        
+
         builder.Services.AddSingleton<ProductDAO>(new ProductAPIClient("https://localhost:7297"));
         builder.Services.AddSingleton<ProductLineDAO>(new ProductLineAPIClient("https://localhost:7297"));
         builder.Services.AddSingleton<DeliveryDAO>(new DeliveryAPIClient("https://localhost:7297"));
         builder.Services.AddSingleton<AccountDAO>(new AccountAPIClient("https://localhost:7297"));
+        builder.Services.AddSingleton<BasketDAO>(new BasketAPIClient("https://localhost:7297"));
 
 
         builder.Services.AddControllersWithViews();
-        
+
+        builder.Services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
+            options.Cookie.HttpOnly = true; // Make the session cookie HTTP only
+            options.Cookie.IsEssential = true; // Make the session cookie essential
+        });
 
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
@@ -42,6 +49,8 @@ public class Program
         app.UseStaticFiles();
 
         app.UseRouting();
+
+        app.UseSession();
 
         app.UseAuthentication();
         app.UseAuthorization();

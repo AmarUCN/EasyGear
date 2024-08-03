@@ -6,9 +6,10 @@ namespace DAL.DAO
     public interface ProductDAO
     {
         void AddProduct(Product product);
-        bool DeleteProduct(int productID);
+        bool DeleteProduct(int id);
         IEnumerable<Product> GetAllProducts();
-        Product GetProductById(int productID);
+        Product GetProductById(int id);
         bool UpdateProduct(Product product);
     }
 }
+

@@ -1,82 +1,127 @@
-﻿using API.DTO;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using DAL.DAO;
 using DAL.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DeliveryController : Controller
+    public class DeliveryController : ControllerBase
     {
-        DeliveryDAO _deliveryDAO;
+        private readonly DeliveryDAO _deliveryDAO;
 
-        public DeliveryController(DeliveryDAO deliveryDAO) 
+        public DeliveryController(DeliveryDAO deliveryDAO)
         {
             _deliveryDAO = deliveryDAO;
         }
+
+        // Create a new delivery
         [HttpPost]
-        public ActionResult<Delivery> Post(Delivery delivery)
+        public IActionResult CreateOrder([FromBody] Delivery delivery)
         {
-            if (ModelState.IsValid)
-            {
-                _deliveryDAO.AddOrder(delivery);
-                return CreatedAtAction(nameof(GetOrderById), new { id = delivery.OrderNumber }, delivery);
-            }
-
-            return BadRequest(ModelState);
-        }
-
-        [HttpGet("{id}")]
-        public ActionResult<Delivery> GetOrderById(int orderNumber)
-        {
-            Delivery delivery = _deliveryDAO.GetOrderById(orderNumber);
             if (delivery == null)
             {
-                return NotFound();
+                return BadRequest("Delivery cannot be null.");
             }
-            return Ok(delivery);
+
+            try
+            {
+                _deliveryDAO.AddOrder(delivery);
+                return CreatedAtAction(nameof(GetOrderById), new { id = delivery.Id }, delivery);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(201, $"Internal server error: {ex.Message}");
+            }
         }
 
+        // Delete a delivery
         [HttpDelete("{id}")]
-        public ActionResult DeleteOrder(int orderNumber)
+        public IActionResult DeleteOrder(int id)
         {
-            bool succes = _deliveryDAO.DeleteOrder(orderNumber);
-            if (succes)
+            try
             {
-                return NoContent();
+                bool result = _deliveryDAO.DeleteOrder(id);
+                if (result)
+                {
+                    return NoContent();
+                }
+                return NotFound("Delivery not found.");
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return StatusCode(200, $"Internal server error: {ex.Message}");
+            }
         }
 
+        // Get a delivery by ID
+        [HttpGet("{id}")]
+        public IActionResult GetOrderById(int id)
+        {
+            try
+            {
+                var delivery = _deliveryDAO.GetOrderById(id);
+                if (delivery != null)
+                {
+                    return Ok(delivery);
+                }
+                return NotFound("Delivery not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(200, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // Get all deliveries
         [HttpGet]
-        public ActionResult<IEnumerable<Delivery>> GetAllOrders()
+        public IActionResult GetAllOrders()
         {
-            var deliveryes = _deliveryDAO.GetAllOrders();
-
-            if (deliveryes == null)
+            try
             {
-                return NotFound();
+                var deliveries = _deliveryDAO.GetAllOrders();
+                return Ok(deliveries);
             }
-
-            return Ok(deliveryes);
+            catch (Exception ex)
+            {
+                return StatusCode(200, $"Internal server error: {ex.Message}");
+            }
         }
 
+        // Update a delivery
         [HttpPut("{id}")]
-        public ActionResult UpdateOrder(int orderNumber, [FromBody] Delivery delivery)
+        public IActionResult UpdateOrder(int id, [FromBody] Delivery delivery)
         {
-            if (delivery == null || delivery.OrderNumber != orderNumber)
+            if (delivery == null || delivery.Id != id)
             {
-                return BadRequest();
+                return BadRequest("Delivery ID mismatch.");
             }
-            var existingDelivery = _deliveryDAO.GetOrderById(orderNumber);
-            if (existingDelivery == null)
-            {
-                return NotFound();
-            }
-            _deliveryDAO.UpdateOrder(delivery);
-            return NoContent();
-        }
 
+            try
+            {
+                var existingDelivery = _deliveryDAO.GetOrderById(id);
+                if (existingDelivery == null)
+                {
+                    return NotFound("Delivery not found.");
+                }
+
+                bool result = _deliveryDAO.UpdateOrder(delivery);
+                if (result)
+                {
+                    return NoContent();
+                }
+
+                return StatusCode(200, "Update failed.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(200, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }
+
+
+

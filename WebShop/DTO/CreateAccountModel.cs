@@ -4,9 +4,6 @@ namespace WebShop.DTO
 {
     public class CreateAccountModel
     {
-        [Required]
-        [Display(Name = "Username")]
-        public string UserName { get; set; }
 
         [Required]
         [EmailAddress]
@@ -19,3 +16,4 @@ namespace WebShop.DTO
         public string Password { get; set; }
     }
 }
+

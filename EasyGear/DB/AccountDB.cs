@@ -25,26 +25,31 @@ namespace DAL.DB
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
-                var command = new SqlCommand("SELECT * FROM Account WHERE Email = @Email AND PasswordWithHash = @PasswordWithHash", connection);
+                var command = new SqlCommand("SELECT * FROM Account WHERE Email = @Email", connection);
                 command.Parameters.AddWithValue("@Email", email);
-                command.Parameters.AddWithValue("@PasswordWithHash", password);
 
                 connection.Open();
                 using (var reader = command.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        return new Account(
-                            Convert.ToInt32(reader["AccountID"]),
-                            reader["UserName"].ToString(),
-                            reader["Email"].ToString(),
-                            reader["PasswordWithHash"].ToString()
-                        );
+                        var storedPassword = reader["PasswordWithHash"].ToString();
+                        // Directly comparing the password for simplicity.
+                        // Be sure to add proper validation logic here.
+                        if (storedPassword == password)
+                        {
+                            return new Account(
+                                Convert.ToInt32(reader["AccountID"]),
+                                reader["Email"].ToString(),
+                                storedPassword
+                            );
+                        }
                     }
                 }
             }
             return null;
         }
+
 
         public Account? GetById(int accountID)
         {
@@ -60,7 +65,6 @@ namespace DAL.DB
                     {
                         return new Account(
                             Convert.ToInt32(reader["AccountID"]),
-                            reader["UserName"].ToString(),
                             reader["Email"].ToString(),
                             reader["PasswordWithHash"].ToString()
                         );
@@ -75,14 +79,16 @@ namespace DAL.DB
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
-                var command = new SqlCommand("INSERT INTO Account (UserName, Email, PasswordWithHash) VALUES (@UserName, @Email, @PasswordWithHash); SELECT SCOPE_IDENTITY();", connection);
-                command.Parameters.AddWithValue("@UserName", account.UserName);
+                var command = new SqlCommand("INSERT INTO Account (Email, PasswordWithHash) VALUES (@Email, @PasswordWithHash); SELECT SCOPE_IDENTITY();", connection);
                 command.Parameters.AddWithValue("@Email", account.Email);
-                command.Parameters.AddWithValue("@PasswordWithHash", account.Password);
+                command.Parameters.AddWithValue("@PasswordWithHash", account.Password); // Plain text
 
                 connection.Open();
                 return Convert.ToInt32(command.ExecuteScalar());
             }
         }
+
     }
 }
+
+
