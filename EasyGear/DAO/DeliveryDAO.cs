@@ -9,7 +9,7 @@ namespace DAL.DAO
 {
     public interface DeliveryDAO
     {
-        void AddOrder(Delivery delivery);
+        int AddOrder(Delivery delivery);
         bool DeleteOrder(int id);
         IEnumerable<Delivery> GetAllOrders();
         Delivery? GetOrderById(int id);

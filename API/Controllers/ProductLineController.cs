@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using DAL.DAO;
+﻿using DAL.DAO;
 using DAL.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
@@ -15,104 +15,72 @@ namespace API.Controllers
             _productLineDAO = productLineDAO;
         }
 
-        // Create a new ProductLine
-        [HttpPost]
-        public IActionResult CreateProductLine([FromBody] ProductLine productLine)
+        // GET: api/ProductLine/{id}
+        [HttpGet("{id}")]
+        public ActionResult<ProductLine> GetProductLineById(int id)
         {
+            var productLine = _productLineDAO.GetProductLineById(id);
             if (productLine == null)
             {
-                return BadRequest("ProductLine cannot be null.");
+                return NotFound();
             }
-
-            try
-            {
-                _productLineDAO.AddProductLine(productLine);
-                return CreatedAtAction(nameof(GetProductLineById), new { id = productLine.Id }, productLine);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(201, $"Internal server error: {ex.Message}");
-            }
+            return Ok(productLine);
         }
 
-        // Delete a ProductLine
-        [HttpDelete("{id}")]
-        public IActionResult DeleteProductLine(int id)
-        {
-            try
-            {
-                bool result = _productLineDAO.DeleteProductLine(id);
-                if (result)
-                {
-                    return NoContent();
-                }
-                return NotFound("ProductLine not found.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(200, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        // Get a ProductLine by ID
-        [HttpGet("{id}")]
-        public IActionResult GetProductLineById(int id)
-        {
-            try
-            {
-                var productLine = _productLineDAO.GetProductLineById(id);
-                if (productLine != null)
-                {
-                    return Ok(productLine);
-                }
-                return NotFound("ProductLine not found.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(200, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        // Get all ProductLines
+        // GET: api/ProductLine
         [HttpGet]
-        public IActionResult GetAllProductLines()
+        public ActionResult<IEnumerable<ProductLine>> GetAllProductLines()
         {
-            try
-            {
-                var productLines = _productLineDAO.GetAllProductLines();
-                return Ok(productLines);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(200, $"Internal server error: {ex.Message}");
-            }
+            var productLines = _productLineDAO.GetAllProductLines();
+            return Ok(productLines);
         }
 
-        // Update a ProductLine
+        // POST: api/ProductLine
+        [HttpPost]
+        public ActionResult<ProductLine> AddProductLine(ProductLine productLine)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Add the ProductLine to the database
+            _productLineDAO.AddProductLine(productLine);
+            return CreatedAtAction(nameof(GetProductLineById), new { id = productLine.Id }, productLine);
+        }
+
+        // PUT: api/ProductLine/{id}
         [HttpPut("{id}")]
-        public IActionResult UpdateProductLine(int id, [FromBody] ProductLine productLine)
+        public ActionResult UpdateProductLine(int id, [FromBody] ProductLine productLine)
         {
             if (productLine == null || productLine.Id != id)
             {
-                return BadRequest("ProductLine data is invalid.");
+                return BadRequest();
+            }
+            var existingProductLine = _productLineDAO.GetProductLineById(id);
+            if (existingProductLine == null)
+            {
+                return NotFound();
             }
 
-            try
+            _productLineDAO.UpdateProductLine(productLine);
+            return NoContent();
+        }
+
+        // DELETE: api/ProductLine/{id}
+        [HttpDelete("{id}")]
+        public ActionResult DeleteProductLine(int id)
+        {
+            var existingProductLine = _productLineDAO.GetProductLineById(id);
+            if (existingProductLine == null)
             {
-                bool result = _productLineDAO.UpdateProductLine(productLine);
-                if (result)
-                {
-                    return NoContent();
-                }
-                return NotFound("ProductLine not found.");
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                return StatusCode(200, $"Internal server error: {ex.Message}");
-            }
+
+            _productLineDAO.DeleteProductLine(id);
+            return NoContent();
         }
     }
 }
-
 
 

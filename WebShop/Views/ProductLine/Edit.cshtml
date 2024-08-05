@@ -1,0 +1,51 @@
+﻿@model DAL.Models.ProductLine
+
+<h2>Edit Product Line</h2>
+
+<form id="productLineForm" action="/ProductLine/Edit" method="post">
+    <div class="form-group">
+        <label for="ProductID">Product</label>
+        <select id="ProductID" name="ProductID" class="form-control">
+            <option value="">Select Product</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <span id="ProductID-error" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Quantity">Quantity</label>
+        <input type="number" id="Quantity" name="Quantity" class="form-control" min="1" value="@Model.Quantity" />
+        <span id="Quantity-error" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="BasketID">Basket</label>
+        <!-- Static value for BasketID -->
+        <input type="text" id="BasketID" name="BasketID" class="form-control" value="@Model.BasketID" readonly />
+        <span id="BasketID-error" class="text-danger"></span>
+    </div>
+
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data provided by the server
+            var products = @Html.Raw(Json.Serialize(ViewBag.Products));
+
+            // Populate ProductID dropdown
+            var productSelect = document.getElementById('ProductID');
+            products.forEach(function (product) {
+                var option = document.createElement('option');
+                option.value = product.Id;
+                option.text = product.ProductName;
+                if (product.Id == @Model.ProductID) {
+                    option.selected = true;
+                }
+                productSelect.add(option);
+            });
+        });
+    </script>
+}

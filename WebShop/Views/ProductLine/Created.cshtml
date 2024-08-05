@@ -1,0 +1,31 @@
+﻿@model List<DAL.Models.ProductLine>
+
+@{
+    ViewData["Title"] = "Created Product Lines";
+}
+
+<h2>Created Product Lines</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product ID</th>
+            <th>Quantity</th>
+            <th>Basket ID</th>
+            <th>Order Number</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var productLine in Model)
+        {
+            <tr>
+                <td>@productLine.ProductID</td>
+                <td>@productLine.Quantity</td>
+                <td>@productLine.BasketID</td>
+                <td>@productLine.OrderNumber</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Create", "ProductLine")" class="btn btn-primary">Add More Product Lines</a>

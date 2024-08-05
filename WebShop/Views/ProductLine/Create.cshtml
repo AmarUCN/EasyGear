@@ -1,0 +1,90 @@
+﻿@model List<DAL.Models.ProductLine>
+
+@{
+    ViewData["Title"] = "Create Product Lines";
+    var products = ViewBag.Products as IEnumerable<DAL.Models.Product>;
+    var deliveryId = ViewData["DeliveryId"] as int?;
+}
+
+<h2>Create Product Lines</h2>
+
+<form asp-action="Create" method="post" id="productLineForm">
+    <div id="productLinesContainer">
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <div class="product-line-entry" data-index="@i">
+                <div class="form-group">
+                    <label for="ProductID_@i">Product</label>
+                    @Html.DropDownListFor(
+                             model => Model[i].ProductID,
+                             new SelectList(products, "Id", "ProductName", Model[i].ProductID),
+                             "Select Product",
+                             new { @class = "form-control", id = "ProductID_@i" }
+                             )
+                </div>
+
+                <div class="form-group">
+                    <label for="Quantity_@i">Quantity</label>
+                    <input type="number" id="Quantity_@i" name="ProductLines[@i].Quantity" class="form-control" min="1" value="@Model[i].Quantity" />
+                </div>
+
+                <div class="form-group">
+                    <label for="BasketID_@i">Basket ID (optional)</label>
+                    <input type="number" id="BasketID_@i" name="ProductLines[@i].BasketID" class="form-control" value="@Model[i].BasketID" />
+                </div>
+
+                <!-- Hidden field for OrderNumber -->
+                <input type="hidden" id="OrderNumber_@i" name="ProductLines[@i].OrderNumber" value="@deliveryId" />
+
+                <button type="button" class="btn btn-danger remove-product-line">Remove</button>
+            </div>
+        }
+    </div>
+
+    <button type="button" id="addProductLine" class="btn btn-primary">Add Product Line</button>
+    <button type="submit" class="btn btn-primary">Create Product Lines</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var productLinesContainer = document.getElementById('productLinesContainer');
+            var addProductLineButton = document.getElementById('addProductLine');
+            var index = @Model.Count; // Initial index for new entries
+
+            addProductLineButton.addEventListener('click', function () {
+                var newEntryHtml = `
+                            <div class="product-line-entry" data-index="${index}">
+                                <div class="form-group">
+                                    <label for="ProductID_${index}">Product</label>
+                                    <select name="ProductLines[${index}].ProductID" id="ProductID_${index}" class="form-control">
+        @foreach (var product in products)
+        {
+                                                <option value="@product.Id">@product.ProductName</option>
+        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="Quantity_${index}">Quantity</label>
+                                    <input type="number" id="Quantity_${index}" name="ProductLines[${index}].Quantity" class="form-control" min="1" value="" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="BasketID_${index}">Basket ID (optional)</label>
+                                    <input type="number" id="BasketID_${index}" name="ProductLines[${index}].BasketID" class="form-control" value="" />
+                                </div>
+                                <input type="hidden" id="OrderNumber_${index}" name="ProductLines[${index}].OrderNumber" value="@deliveryId" />
+                                <button type="button" class="btn btn-danger remove-product-line">Remove</button>
+                            </div>
+                        `;
+                productLinesContainer.insertAdjacentHTML('beforeend', newEntryHtml);
+                index++;
+            });
+
+            productLinesContainer.addEventListener('click', function (event) {
+                if (event.target && event.target.classList.contains('remove-product-line')) {
+                    event.target.parentElement.remove();
+                }
+            });
+        });
+    </script>
+}

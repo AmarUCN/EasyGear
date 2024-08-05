@@ -26,12 +26,22 @@ namespace API.Controllers
 
             try
             {
-                _basketDAO.AddBasket(basket);
+                // Get the ID of the newly created basket
+                int newBasketId = _basketDAO.AddBasket(basket);
+
+                if (newBasketId <= 0)
+                {
+                    return StatusCode(201, "An error occurred while creating the basket.");
+                }
+
+                // Set the ID on the basket object
+                basket.Id = newBasketId;
+
                 return CreatedAtAction(nameof(GetBasketById), new { id = basket.Id }, basket);
             }
             catch (Exception ex)
             {
-                return StatusCode(201, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 

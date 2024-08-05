@@ -18,32 +18,59 @@ namespace DAL.DB
             _connection = new SqlConnection(connectionString);
         }
 
-        public void AddOrder(Delivery delivery)
+        public int AddOrder(Delivery delivery)
         {
+            SqlTransaction transaction = null;
             try
             {
                 _connection.Open();
+                transaction = _connection.BeginTransaction();
 
-                string query = "INSERT INTO Delivery (DeliveredTo, DeliveryDate, AccountID) VALUES (@DeliveredTo, @DeliveryDate, @AccountID); SELECT SCOPE_IDENTITY();";
+                string query = "INSERT INTO Delivery (DeliveredTo, DeliveryDate) VALUES (@DeliveredTo, @DeliveryDate); SELECT SCOPE_IDENTITY();";
 
-                using (var command = new SqlCommand(query, _connection))
+                using (var command = new SqlCommand(query, _connection, transaction))
                 {
                     command.Parameters.AddWithValue("@DeliveredTo", delivery.DeliveredTo);
                     command.Parameters.AddWithValue("@DeliveryDate", delivery.DeliveryDate);
-                    command.Parameters.AddWithValue("@AccountID", delivery.AccountID);
 
-                    delivery.Id = Convert.ToInt32(command.ExecuteScalar());
+                    // Get the ID of the newly inserted delivery
+                    int deliveryId = Convert.ToInt32(command.ExecuteScalar());
+
+                    // Commit transaction
+                    transaction.Commit();
+
+                    return deliveryId;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                // Rollback transaction if there is an error
+                if (transaction != null)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"Error rolling back transaction: {rollbackEx.Message}");
+                    }
+                }
+
+                Console.WriteLine($"Error inserting Delivery: {ex.Message}");
+                // Consider logging the exception to a file or monitoring system
+                return -1; // Indicate failure
             }
             finally
             {
-                _connection.Close();
+                if (_connection.State == System.Data.ConnectionState.Open)
+                {
+                    _connection.Close();
+                }
             }
         }
+
+
 
         public bool DeleteOrder(int id)
         {
@@ -81,7 +108,7 @@ namespace DAL.DB
             {
                 _connection.Open();
 
-                string query = "SELECT OrderNumber, DeliveredTo, DeliveryDate, AccountID FROM Delivery";
+                string query = "SELECT OrderNumber, DeliveredTo, DeliveryDate FROM Delivery";
 
                 using (var command = new SqlCommand(query, _connection))
                 {
@@ -92,9 +119,8 @@ namespace DAL.DB
                         int id = reader.GetInt32(0);
                         string deliveredTo = reader.GetString(1);
                         DateTime deliveryDate = reader.GetDateTime(2);
-                        int accountId = reader.GetInt32(3);
 
-                        deliveries.Add(new Delivery(id, deliveredTo, deliveryDate, accountId));
+                        deliveries.Add(new Delivery(id, deliveredTo, deliveryDate));
                     }
                 }
             }
@@ -116,7 +142,7 @@ namespace DAL.DB
             {
                 _connection.Open();
 
-                string query = "SELECT OrderNumber, DeliveredTo, DeliveryDate, AccountID FROM Delivery WHERE OrderNumber = @OrderNumber";
+                string query = "SELECT OrderNumber, DeliveredTo, DeliveryDate FROM Delivery WHERE OrderNumber = @OrderNumber";
 
                 using (var command = new SqlCommand(query, _connection))
                 {
@@ -129,9 +155,8 @@ namespace DAL.DB
                         int orderId = reader.GetInt32(0);
                         string deliveredTo = reader.GetString(1);
                         DateTime deliveryDate = reader.GetDateTime(2);
-                        int accountId = reader.GetInt32(3);
 
-                        return new Delivery(orderId, deliveredTo, deliveryDate, accountId);
+                        return new Delivery(orderId, deliveredTo, deliveryDate);
                     }
                 }
             }
@@ -153,13 +178,12 @@ namespace DAL.DB
             {
                 _connection.Open();
 
-                string query = "UPDATE Delivery SET DeliveredTo = @DeliveredTo, DeliveryDate = @DeliveryDate, AccountID = @AccountID WHERE OrderNumber = @OrderNumber";
+                string query = "UPDATE Delivery SET DeliveredTo = @DeliveredTo, DeliveryDate = @DeliveryDate WHERE OrderNumber = @OrderNumber";
 
                 using (var command = new SqlCommand(query, _connection))
                 {
                     command.Parameters.AddWithValue("@DeliveredTo", delivery.DeliveredTo);
                     command.Parameters.AddWithValue("@DeliveryDate", delivery.DeliveryDate);
-                    command.Parameters.AddWithValue("@AccountID", delivery.AccountID);
                     command.Parameters.AddWithValue("@OrderNumber", delivery.Id);
 
                     int rowsAffected = command.ExecuteNonQuery();

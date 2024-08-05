@@ -21,20 +21,53 @@ namespace DAL.DB
 
         public void AddProductLine(ProductLine productLine)
         {
-            using (var command = new SqlCommand("INSERT INTO ProductLine (Quantity, ProductID, BasketID, OrderNumber) VALUES (@Quantity, @ProductID, @BasketID, @OrderNumber); SELECT SCOPE_IDENTITY();", _connection))
+            SqlTransaction transaction = null;
+            try
             {
                 _connection.Open();
+                transaction = _connection.BeginTransaction();
 
-                command.Parameters.AddWithValue("@Quantity", productLine.Quantity);
-                command.Parameters.AddWithValue("@ProductID", productLine.ProductID);
-                command.Parameters.AddWithValue("@BasketID", (object)productLine.BasketID ?? DBNull.Value);
-                command.Parameters.AddWithValue("@OrderNumber", (object)productLine.OrderNumber ?? DBNull.Value);
+                using (var command = new SqlCommand("INSERT INTO ProductLine (Quantity, ProductID, BasketID, OrderNumber) VALUES (@Quantity, @ProductID, @BasketID, @OrderNumber); SELECT SCOPE_IDENTITY();", _connection, transaction))
+                {
+                    command.Parameters.AddWithValue("@Quantity", productLine.Quantity);
+                    command.Parameters.AddWithValue("@ProductID", productLine.ProductID);
+                    command.Parameters.AddWithValue("@BasketID", (object)productLine.BasketID ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@OrderNumber", (object)productLine.OrderNumber ?? DBNull.Value);
 
-                productLine.Id = Convert.ToInt32(command.ExecuteScalar());
+                    productLine.Id = Convert.ToInt32(command.ExecuteScalar());
+                }
 
-                _connection.Close();
+                // Commit transaction
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                // Rollback transaction if there is an error
+                if (transaction != null)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"Error rolling back transaction: {rollbackEx.Message}");
+                    }
+                }
+
+                Console.WriteLine($"Error inserting ProductLine: {ex.Message}");
+                // Consider logging the exception to a file or monitoring system
+            }
+            finally
+            {
+                if (_connection.State == System.Data.ConnectionState.Open)
+                {
+                    _connection.Close();
+                }
             }
         }
+
+
 
         public bool DeleteProductLine(int id)
         {
@@ -165,3 +198,5 @@ namespace DAL.DB
         }
     }
 }
+
+

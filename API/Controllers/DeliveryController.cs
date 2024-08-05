@@ -19,7 +19,7 @@ namespace API.Controllers
 
         // Create a new delivery
         [HttpPost]
-        public IActionResult CreateOrder([FromBody] Delivery delivery)
+        public IActionResult CreateOrder([FromBody] DAL.Models.Delivery delivery)
         {
             if (delivery == null)
             {
@@ -28,7 +28,17 @@ namespace API.Controllers
 
             try
             {
-                _deliveryDAO.AddOrder(delivery);
+                // Get the ID of the newly created delivery
+                int newDeliveryId = _deliveryDAO.AddOrder(delivery);
+
+                if (newDeliveryId <= 0)
+                {
+                    return StatusCode(500, "An error occurred while creating the delivery.");
+                }
+
+                // Set the ID on the delivery object
+                delivery.Id = newDeliveryId;
+
                 return CreatedAtAction(nameof(GetOrderById), new { id = delivery.Id }, delivery);
             }
             catch (Exception ex)

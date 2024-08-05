@@ -14,7 +14,7 @@ namespace APIClient
             _client = new RestClient(apiResourceUrl);
         }
 
-        public void AddBasket(Basket basket)
+        public int AddBasket(Basket basket)
         {
             var request = new RestRequest("api/basket", Method.Post)
             {
@@ -23,11 +23,27 @@ namespace APIClient
             request.AddJsonBody(basket);
 
             var response = _client.Execute(request);
+
             if (!response.IsSuccessful)
             {
                 throw new Exception($"Error adding basket: {response.Content}");
             }
+
+            // Extract and return the ID from the Location header or response content
+            var locationHeader = response.Headers.FirstOrDefault(h => h.Name.Equals("Location", StringComparison.OrdinalIgnoreCase));
+            if (locationHeader != null)
+            {
+                var location = locationHeader.Value.ToString();
+                var idString = location.Split('/').Last(); // Extract ID from URL
+                if (int.TryParse(idString, out var id))
+                {
+                    return id;
+                }
+            }
+
+            throw new Exception("Unable to retrieve the ID of the newly created basket.");
         }
+
 
         public IEnumerable<Basket> GetAllBaskets()
         {

@@ -7,79 +7,70 @@ using System.Threading.Tasks;
 using DAL.DAO;
 using DAL.Models;
 using WebShop.DTO;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using WebShop.Models;
 
 namespace WebShop.Controllers
 {
     public class BasketController : Controller
     {
-        private readonly BasketDAO _basketDao;
-        private readonly ProductDAO _productDao;
-        private readonly ProductLineDAO _productLineDao;
+        private readonly BasketDAO _basketDAO;
+        private readonly ProductDAO _productDAO;
 
-        public BasketController(BasketDAO basketDao, ProductDAO productDao, ProductLineDAO productLineDao)
+        public BasketController(BasketDAO basketDAO, ProductDAO productDAO)
         {
-            _basketDao = basketDao;
-            _productDao = productDao;
-            _productLineDao = productLineDao;
+            _basketDAO = basketDAO;
+            _productDAO = productDAO;
         }
 
-        // GET: /Basket/Create
+        // GET: Basket/Create
         public IActionResult Create()
         {
-            // Prepare view with necessary data
-            ViewBag.Products = _productDao.GetAllProducts();
             return View();
         }
 
-        // POST: /Basket/Create
+        // POST: Basket/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(BasketViewModel model)
+        public IActionResult Create(DAL.Models.Basket basket)
         {
-            try
+            if (ModelState.IsValid)
             {
-                var basket = new Basket(model.CreatedAt);
-                _basketDao.AddBasket(basket);
-
-                foreach (var productLine in model.ProductLines)
+                try
                 {
-                    var product = _productDao.GetProductById(productLine.ProductId);
-                    if (product == null)
-                    {
-                        ModelState.AddModelError("", $"Product with ID {productLine.ProductId} does not exist.");
-                        ViewBag.Products = _productDao.GetAllProducts();
-                        return View(model);
-                    }
+                    basket.CreatedAt = DateTime.Now;
+                    int basketId = _basketDAO.AddBasket(basket);
 
-                    var productLineEntry = new ProductLine(productLine.ProductId, productLine.Quantity, basket.Id);
-
-                    // Log before adding product line
-                    Console.WriteLine($"Adding ProductLine: ProductId = {productLineEntry.ProductID}, Quantity = {productLineEntry.Quantity}, BasketId = {productLineEntry.BasketID}");
-
-                    _productLineDao.AddProductLine(productLineEntry);
+                    // Redirect to ProductLine creation for the basket, passing the Basket ID
+                    return RedirectToAction("CreateForBasket", "ProductLine", new { basketId = basketId });
                 }
+                catch (Exception ex)
+                {
+                    // Log error and show an error view
+                    Console.WriteLine($"Error creating basket: {ex.Message}");
+                    ModelState.AddModelError("", "An error occurred while creating the basket. Please try again.");
+                }
+            }
 
-                TempData["Message"] = "Basket and product lines created successfully!";
-                return RedirectToAction("Index");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"Error creating basket and adding product lines: {ex.Message}");
-                ViewBag.Products = _productDao.GetAllProducts();
-                return View(model);
-            }
+            // If the model state is invalid or an error occurs, return to the create view
+            return View(basket);
         }
 
-
-
-        // GET: /Basket/Index
-        public IActionResult Index()
+        // GET: Basket/Success
+        public IActionResult Success()
         {
-            var baskets = _basketDao.GetAllBaskets();
-            return View(baskets);
+            return View();
         }
     }
 }
+
+
+
+
+
+
+
+
 
 
 

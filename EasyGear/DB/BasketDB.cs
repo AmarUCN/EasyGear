@@ -18,30 +18,58 @@ namespace DAL.DB
             _connection = new SqlConnection(connectionString);
         }
 
-        public void AddBasket(Basket basket)
+        public int AddBasket(Basket basket)
         {
+            SqlTransaction transaction = null;
             try
             {
                 _connection.Open();
+                transaction = _connection.BeginTransaction();
 
                 string query = "INSERT INTO Basket (CreatedAt) VALUES (@CreatedAt); SELECT SCOPE_IDENTITY();";
 
-                using (var command = new SqlCommand(query, _connection))
+                using (var command = new SqlCommand(query, _connection, transaction))
                 {
                     command.Parameters.AddWithValue("@CreatedAt", basket.CreatedAt);
 
-                    basket.Id = Convert.ToInt32(command.ExecuteScalar());
+                    // Get the ID of the newly inserted basket
+                    int basketId = Convert.ToInt32(command.ExecuteScalar());
+
+                    // Commit transaction
+                    transaction.Commit();
+
+                    return basketId;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                // Rollback transaction if there is an error
+                if (transaction != null)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"Error rolling back transaction: {rollbackEx.Message}");
+                    }
+                }
+
+                Console.WriteLine($"Error inserting Basket: {ex.Message}");
+                // Consider logging the exception to a file or monitoring system
+                return -1; // Indicate failure
             }
             finally
             {
-                _connection.Close();
+                if (_connection.State == System.Data.ConnectionState.Open)
+                {
+                    _connection.Close();
+                }
             }
         }
+
+
 
         public bool RemoveBasket(int basketId)
         {

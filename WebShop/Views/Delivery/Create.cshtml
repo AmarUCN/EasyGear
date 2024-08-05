@@ -1,0 +1,29 @@
+﻿@model DAL.Models.Delivery
+
+@{
+    ViewData["Title"] = "Create Delivery";
+}
+
+<h2>Create Delivery</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="DeliveredTo" class="control-label"></label>
+        <input asp-for="DeliveredTo" class="form-control" />
+        <span asp-validation-for="DeliveredTo" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="DeliveryDate" class="control-label"></label>
+        <input asp-for="DeliveryDate" type="date" class="form-control" />
+        <span asp-validation-for="DeliveryDate" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Add Delivery</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

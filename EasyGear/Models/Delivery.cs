@@ -5,21 +5,18 @@
         public int Id { get; set; }
         public string DeliveredTo { get; set; }
         public DateTime DeliveryDate { get; set; }
-        public int AccountID { get; set; }
 
-        public Delivery(int id, string deliveredTo, DateTime deliveryDate, int accountID)
+        public Delivery(int id, string deliveredTo, DateTime deliveryDate)
         {
             Id = id;
             DeliveredTo = deliveredTo;
             DeliveryDate = deliveryDate;
-            AccountID = accountID;
         }
 
-        public Delivery(string deliveredTo, DateTime deliveryDate, int accountID)
+        public Delivery(string deliveredTo, DateTime deliveryDate)
         {
             DeliveredTo = deliveredTo;
             DeliveryDate = deliveryDate;
-            AccountID = accountID;
         }
 
         public Delivery() { }

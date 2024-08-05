@@ -15,7 +15,7 @@ namespace APIClient
             _client = new RestClient(apiResourceUrl);
         }
 
-        public void AddOrder(Delivery delivery)
+        public int AddOrder(Delivery delivery)
         {
             var request = new RestRequest("api/delivery", Method.Post)
             {
@@ -24,11 +24,27 @@ namespace APIClient
             request.AddJsonBody(delivery);
 
             var response = _client.Execute(request);
+
             if (!response.IsSuccessful)
             {
                 throw new Exception($"Error adding delivery: {response.Content}");
             }
+
+            // Extract and return the ID from the Location header or response content
+            var locationHeader = response.Headers.FirstOrDefault(h => h.Name.Equals("Location", StringComparison.OrdinalIgnoreCase));
+            if (locationHeader != null)
+            {
+                var location = locationHeader.Value.ToString();
+                var idString = location.Split('/').Last(); // Extract ID from URL
+                if (int.TryParse(idString, out var id))
+                {
+                    return id;
+                }
+            }
+
+            throw new Exception("Unable to retrieve the ID of the newly created delivery.");
         }
+
 
         public bool DeleteOrder(int id)
         {

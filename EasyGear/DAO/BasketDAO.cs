@@ -12,7 +12,7 @@ namespace DAL.DAO
 {
     public interface BasketDAO
     {
-        void AddBasket(Basket basket);
+        int AddBasket(Basket basket);
         bool RemoveBasket(int basketId);
         Basket? GetBasketById(int basketId);
         IEnumerable<Basket> GetAllBaskets();
